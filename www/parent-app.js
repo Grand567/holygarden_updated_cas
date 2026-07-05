@@ -472,8 +472,8 @@ async function renderMarks(v96 = null) {
   const v100 = [...v99].sort();
   const v101 = v96 || v100[0];
   let v102 = (v97 || []).filter(v108 => v108.term === v101);
-  const gpaPush = v102.find(v => v.subject === 'FINAL_GPA_X100');
-  v102 = v102.filter(v => v.subject !== 'FINAL_GPA_X100');
+  const gpaPush = v102.find(v => v.subject && v.subject.startsWith('FINAL_GPA_'));
+  v102 = v102.filter(v => !(v.subject && v.subject.startsWith('FINAL_GPA_')));
   if (window.sortSubjectsByStandardOrder) {
       v102 = window.sortSubjectsByStandardOrder(v102);
   }
@@ -488,31 +488,42 @@ async function renderMarks(v96 = null) {
   const v104 = (v98 || []).filter(v109 => v109.term_id === v103 || v109.term_id === v101);
     function getFallbackSubjectConfig(subjectName, cls) {
         const sub = (subjectName || "").toLowerCase().trim();
-        const isPrimary = cls && (cls.toLowerCase().includes("nursery") || cls.toLowerCase().includes("lkg") || cls.toLowerCase().includes("ukg") || cls.toLowerCase().includes("pg") || cls.toLowerCase().includes("grade 1") || cls.toLowerCase().includes("grade 2") || cls.toLowerCase().includes("grade 3") || cls.toLowerCase().includes("class 1") || cls.toLowerCase().includes("class 2") || cls.toLowerCase().includes("class 3"));
+        const clsLower = (cls || "").toLowerCase();
         
+        const isNurseryUKG = clsLower.includes("nursery") || clsLower.includes("lkg") || clsLower.includes("ukg") || clsLower.includes("pg");
+        const isClass1to3 = clsLower.includes("grade 1") || clsLower.includes("grade 2") || clsLower.includes("grade 3") || clsLower.includes("class 1") || clsLower.includes("class 2") || clsLower.includes("class 3");
+        const isClass4to8 = clsLower.includes("grade 4") || clsLower.includes("grade 5") || clsLower.includes("grade 6") || clsLower.includes("grade 7") || clsLower.includes("grade 8") || clsLower.includes("class 4") || clsLower.includes("class 5") || clsLower.includes("class 6") || clsLower.includes("class 7") || clsLower.includes("class 8");
+        const isClass1to8 = isClass1to3 || isClass4to8;
+
         let thFull = 75, prFull = 25, credit = 4;
-        
-        if (isPrimary) {
-            thFull = 100; prFull = 0;
-            if (sub.includes("oral") || sub.includes("computer") || sub.includes("moral") || sub === "gk" || sub.includes("general knowledge") || sub.includes("drawing") || sub.includes("rhyme") || sub.includes("hygiene") || sub === "com" || sub === "mor" || sub === "dra") {
+
+        if (isNurseryUKG) {
+            thFull = 100; prFull = 0; 
+            if (sub.includes("oral") || sub.includes("rhyme") || sub.includes("draw") || sub.includes("hygiene") || sub === "dra") {
                 thFull = 50; prFull = 0; credit = 2;
-            } else if (sub.includes("local") || sub === "lc" || sub === "loc") {
+            }
+        } else if (isClass1to3) {
+            thFull = 100; prFull = 0; 
+            if (sub.includes("local") || sub === "lc" || sub === "loc") {
                 thFull = 50; prFull = 0; credit = 3;
-            } else if (sub.includes("nepali") || sub === "nep" || sub === "नेपाली") credit = 4;
-            else if (sub.includes("english") || sub === "eng" || sub === "अंग्रेजी") credit = 4;
-            else if (sub.includes("math") || sub === "mat" || sub === "गणित") credit = 4;
-            else if (sub.includes("science") || sub === "sci" || sub === "विज्ञान") credit = 4;
-            else if (sub.includes("serofero") || sub.includes("surroundings") || sub === "mer" || sub.includes("सेरोफेरो")) credit = 4;
-            else credit = 2;
+            } else if (sub.includes("computer") || sub === "com" || sub === "gk" || sub.includes("general knowledge") || sub.includes("moral") || sub === "mor") {
+                thFull = 50; prFull = 0; credit = 2;
+            } else if (sub.includes("oral") || sub.includes("draw") || sub.includes("rhyme") || sub.includes("hygiene") || sub === "dra") {
+                thFull = 50; prFull = 0; credit = 2;
+            }
         } else {
-            if (sub.includes("oral") || sub.includes("moral") || sub === "gk" || sub.includes("general knowledge") || sub.includes("drawing") || sub.includes("rhyme") || sub.includes("hygiene") || sub === "mor" || sub === "dra") {
+            if (isClass4to8 && (sub.includes("computer") || sub === "com" || sub === "gk" || sub.includes("general knowledge") || sub.includes("moral") || sub === "mor")) {
+                thFull = 50; prFull = 0; credit = 2;
+            } else if (sub.includes("oral") || sub.includes("moral") || sub === "gk" || sub.includes("general knowledge") || sub.includes("drawing") || sub.includes("rhyme") || sub.includes("hygiene") || sub === "mor" || sub === "dra") {
                 thFull = 50; prFull = 0; credit = 2;
             } else if (sub === "math" || sub === "mathematics" || sub === "mat" || sub.includes("o.math") || sub.includes("opt. math") || sub.includes("optional math") || sub.includes("opt math") || sub.includes("account")) {
                 thFull = 100; prFull = 0; credit = 4;
-            } else if (sub.includes("computer") || sub === "com" || sub.includes("grammar")) {
+            } else if (sub.includes("grammar")) {
                 thFull = 50; prFull = 50; credit = 2;
             } else if (sub.includes("health") || sub.includes("physical") || sub.includes("creative") || sub.includes("hpe") || sub === "hea") {
                 thFull = 75; prFull = 25; credit = 3;
+            } else {
+                thFull = 75; prFull = 25; credit = 4;
             }
         }
         const total = thFull + prFull;
@@ -578,20 +589,14 @@ async function renderMarks(v96 = null) {
   
   let rowsHtml = v102.map(v111 => {
     const v112 = v111.term && (
-      v111.term.toLowerCase().includes("mid") || 
-      v111.term.toLowerCase() === "first term" || 
-      v111.term.toLowerCase() === "second term" || 
-      v111.term.toLowerCase() === "third term" ||
-      v111.term.toLowerCase() === "first terminal" ||
-      v111.term.toLowerCase() === "second terminal" ||
-      v111.term.toLowerCase() === "third terminal"
+      v111.term.toLowerCase().includes("mid")
     );
     let v113 = parseFloat(v111.value) || 0;
     let v114 = 0;
     let v115 = false;
     
     const s = v111.subject.toLowerCase().trim();
-    const subjectObj = window.subjectsDb?.find(sub => (window.normalizeSubjectName ? window.normalizeSubjectName(sub.name) : sub.name).toLowerCase().trim() === s) || { name: v111.subject, thFull: 75, prFull: 25 };
+    const subjectObj = window.subjectsDb?.find(sub => (window.normalizeSubjectName ? window.normalizeSubjectName(sub.name) : sub.name).toLowerCase().trim() === s) || { name: v111.subject };
 
     if (!v112) {
       const v122 = window.normalizeSubjectName(v111.subject).toLowerCase();
@@ -651,17 +656,9 @@ async function renderMarks(v96 = null) {
   let finalGpaDisplay = "";
   const isNG = ngCount > 3;
   if (gpaPush !== undefined) {
-      let finalGpa = (parseInt(gpaPush.value) / 100).toFixed(2);
-      if (parseInt(gpaPush.value) === 0 && isNG) finalGpa = 'NG';
-      finalGpaDisplay = `
-          <div style="padding:1rem; border-top:2px solid #e2e8f0; display:flex; align-items:center; background:#f8fafc;">
-              <span style="flex:2; font-weight:800; color:var(--primary);">TOTAL GPA</span>
-              <div style="flex:1; text-align:center;"></div>
-              <span style="flex:1; text-align:right; font-weight:900; font-size:1.1rem; color:var(--text-main);">${finalGpa}</span>
-          </div>
-      `;
-  } else if (totalCreditHours > 0) {
-      let finalGpa = isNG ? "NG" : (totalWeightedGpa / totalCreditHours).toFixed(2);
+      let finalGpaStr = gpaPush.subject.replace('FINAL_GPA_', '');
+      let finalGpa = (parseInt(finalGpaStr) / 100).toFixed(2);
+      if (parseInt(finalGpaStr) === 0 && isNG) finalGpa = 'NG';
       finalGpaDisplay = `
           <div style="padding:1rem; border-top:2px solid #e2e8f0; display:flex; align-items:center; background:#f8fafc;">
               <span style="flex:2; font-weight:800; color:var(--primary);">TOTAL GPA</span>

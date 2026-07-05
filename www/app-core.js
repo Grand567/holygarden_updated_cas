@@ -2230,6 +2230,15 @@ window.importMarksExcel = function (v591) {
       });
       let v597 = 0;
       const v598 = state.selectedTerm;
+      
+      const { data: existingMarks } = await v1.from("marks").select("*").eq("term", v598);
+      const existingMarksMap = {};
+      if (existingMarks) {
+          for (const m of existingMarks) {
+              existingMarksMap[m.student_id + "_" + m.subject] = m;
+          }
+      }
+      
       if (!state.marks[v598]) {
         state.marks[v598] = {};
       }
@@ -2334,8 +2343,6 @@ window.importMarksExcel = function (v591) {
               continue;
             }
             const v640 = v638 ? 0 : parseFloat(v636) || 0;
-            const v641 = v639 ? 0 : parseFloat(v637) || 0;
-            const v642 = Math.max(0, Math.round(v640 + v641));
             const v643 = {
               ENG: "English",
               NEP: "Nepali",
@@ -2378,13 +2385,22 @@ window.importMarksExcel = function (v591) {
             const v644 = v643[v634.toUpperCase()];
             const v645 = v644 ? state.subjects.find(v646 => v646.toLowerCase() === v644.toLowerCase()) || v644 : state.subjects.find(v647 => v647.toUpperCase() === v634 || v647.toUpperCase().startsWith(v634) || v634.startsWith(v647.toUpperCase())) || v634;
             const finalSubject = window.normalizeSubjectName ? window.normalizeSubjectName(v645) : v645;
+            
+            let finalPr = v639 ? 0 : parseFloat(v637) || 0;
+            const exist = existingMarksMap[v630.id + "_" + finalSubject];
+            if (v635.pr === undefined && exist && exist.practical_marks !== undefined && exist.practical_marks !== null) {
+                finalPr = exist.practical_marks;
+            }
+            
+            const v642 = Math.max(0, Math.round(v640 + finalPr));
+            
             state.marks[v598][v630.id][finalSubject] = v642;
             v599.push({
               term: v598,
               student_id: v630.id,
               subject: finalSubject,
               theory_marks: v640,
-              practical_marks: v641,
+              practical_marks: finalPr,
               value: v642,
               teacher_id: window.currentUser?.id || null
             });
