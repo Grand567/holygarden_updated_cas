@@ -506,15 +506,15 @@ async function renderMarks(v96 = null) {
             thFull = 100; prFull = 0; 
             if (sub.includes("local") || sub === "lc" || sub === "loc") {
                 thFull = 50; prFull = 0; credit = 3;
-            } else if (sub.includes("computer") || sub === "com" || sub === "gk" || sub.includes("general knowledge") || sub.includes("moral") || sub === "mor") {
+            } else if (sub.includes("computer") || sub === "com" || sub.includes("gk") || sub.includes("g.k") || sub.includes("general knowledge") || sub.includes("moral") || sub === "mor") {
                 thFull = 50; prFull = 0; credit = 2;
             } else if (sub.includes("oral") || sub.includes("draw") || sub.includes("rhyme") || sub.includes("hygiene") || sub === "dra") {
                 thFull = 50; prFull = 0; credit = 2;
             }
         } else {
-            if (isClass4to8 && (sub.includes("computer") || sub === "com" || sub === "gk" || sub.includes("general knowledge") || sub.includes("moral") || sub === "mor")) {
+            if (isClass4to8 && (sub.includes("computer") || sub === "com" || sub.includes("gk") || sub.includes("g.k") || sub.includes("general knowledge") || sub.includes("moral") || sub === "mor")) {
                 thFull = 50; prFull = 0; credit = 2;
-            } else if (sub.includes("oral") || sub.includes("moral") || sub === "gk" || sub.includes("general knowledge") || sub.includes("drawing") || sub.includes("rhyme") || sub.includes("hygiene") || sub === "mor" || sub === "dra") {
+            } else if (sub.includes("oral") || sub.includes("moral") || sub.includes("gk") || sub.includes("g.k") || sub.includes("general knowledge") || sub.includes("drawing") || sub.includes("rhyme") || sub.includes("hygiene") || sub === "mor" || sub === "dra") {
                 thFull = 50; prFull = 0; credit = 2;
             } else if (sub === "math" || sub === "mathematics" || sub === "mat" || sub.includes("o.math") || sub.includes("opt. math") || sub.includes("optional math") || sub.includes("opt math") || sub.includes("account")) {
                 thFull = 100; prFull = 0; credit = 4;
