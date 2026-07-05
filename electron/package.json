@@ -1,0 +1,64 @@
+{
+    "name":  "holy-garden-emis-desktop",
+    "version":  "1.0.0",
+    "description":  "Holy Garden English Secondary School - EMIS Desktop App",
+    "author":  "Holy Garden English Secondary School",
+    "main":  "index.js",
+    "scripts":  {
+                    "start":  "electron .",
+                    "build:debug":  "electron-builder --win portable --config.compression=store",
+                    "build:release":  "electron-builder --win nsis portable --config.compression=maximum",
+                    "dist":  "electron-builder --win portable"
+                },
+    "dependencies":  {
+
+                     },
+    "devDependencies":  {
+                            "electron":  "^31.0.0",
+                            "electron-builder":  "^24.13.3"
+                        },
+    "build":  {
+                  "appId":  "com.holygarden.emis",
+                  "productName":  "Holy Garden EMIS",
+                  "copyright":  "Copyright 2083 Holy Garden English Secondary School",
+                  "directories":  {
+                                      "output":  "dist"
+                                  },
+                  "files":  [
+                                "index.js",
+                                "www/**/*",
+                                "!www/**/*.map"
+                            ],
+                  "win":  {
+                              "icon":  "www/512.png",
+                              "target":  [
+                                             {
+                                                 "target":  "nsis",
+                                                 "arch":  [
+                                                              "x64"
+                                                          ]
+                                             },
+                                             {
+                                                 "target":  "portable",
+                                                 "arch":  [
+                                                              "x64"
+                                                          ]
+                                             }
+                                         ],
+                              "requestedExecutionLevel":  "asInvoker",
+                              "signAndEditExecutable":  false,
+                              "verifyUpdateCodeSignature":  false
+                          },
+                  "nsis":  {
+                               "oneClick":  false,
+                               "allowToChangeInstallationDirectory":  true,
+                               "createDesktopShortcut":  true,
+                               "createStartMenuShortcut":  true,
+                               "shortcutName":  "Holy Garden EMIS",
+                               "artifactName":  "HolyGardenEMIS-${version}-Setup.${ext}"
+                           },
+                  "portable":  {
+                                   "artifactName":  "HolyGardenEMIS-${version}-Portable.${ext}"
+                               }
+              }
+}

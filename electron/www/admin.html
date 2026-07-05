@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Holy Garden &mdash; Admin Dashboard</title>
+    <meta name="description"
+        content="Admin dashboard for Holy Garden English Secondary School attendance, marks, and teacher management.">
+    <!-- Responsive Separate Stylesheets for Desktop vs Mobile -->
+    <link rel="stylesheet" href="admin-mobile.css?v=1.2.0" media="only screen and (max-width: 959px)">
+    <link rel="stylesheet" href="admin-desktop.css?v=1.2.0" media="only screen and (min-width: 960px)">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase UMD -->
+    <script src="libs/supabase.umd.js"></script>
+    <!-- Lucide Icons -->
+    <script src="libs/lucide.min.js"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="libs/xlsx.full.min.js"></script>
+    <!-- Nepali Date Picker -->
+    <link href="./nepali.datepicker.v3.0.0.min.css" rel="stylesheet" type="text/css"/>
+    <script src="./nepali.datepicker.v3.0.0.min.js" type="text/javascript"></script>
+    <script>
+        // Version management and cache cleaning is now handled centrally in shared.js via validateSession()
+    </script>
+    <!-- CAS Configuration -->
+    <script src="cas-config.js"></script>
+</head>
+
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="app">
+        <header class="header">
+            <div class="header-content">
+                <div>
+                    <p style="font-size:0.65rem; color:var(--primary); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.2rem">Holy Garden English Secondary School</p>
+                    <h1 id="view-title" style="font-size:1.25rem">Admin Panel</h1>
+                </div>
+                <div id="admin-info" style="text-align:right">
+                    <button class="btn btn-ghost btn-icon" onclick="window.logout()" title="Logout" style="color:var(--error); padding: 0; width: 36px; height: 36px; background: var(--error-light); border-radius: 50%;">
+                        <i data-lucide="log-out" style="width: 18px; height: 18px;"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main id="main-content" class="container">
+            <!-- DASHBOARD TAB -->
+            <div id="tab-dashboard" class="tab-content active">
+                <div id="dashboard-content"></div>
+            </div>
+
+            <div id="tab-teachers" class="tab-content">
+                <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2 style="margin:0">Teachers</h2>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="btn btn-secondary btn-sm" onclick="window.exportTeachers()" style="background:#e0e7ff; color:var(--primary);">
+                            <i data-lucide="download" style="width:14px; height:14px;"></i> Export
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="window.openAddTeacherForm()">
+                            <i data-lucide="user-plus" style="width:14px; height:14px;"></i> Add Teacher
+                        </button>
+                    </div>
+                </div>
+                <div class="search-wrap" style="margin-bottom: 1rem;">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="teacher-search" class="search-input" placeholder="Search by name..." oninput="window.renderTeachers()">
+                </div>
+                <div id="teachers-list"></div>
+            </div>
+
+            <!-- PARENTS TAB -->
+            <div id="tab-parents" class="tab-content">
+                <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+                    <h2 style="margin:0">Parents</h2>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        <button class="btn btn-secondary btn-sm" onclick="window.setAllParentsMarksVisibility(true)" style="background:#dcfce7; color:#15803d; border:none; display:flex; align-items:center; gap:0.35rem;" title="Show marks for all parents">
+                            <i data-lucide="eye" style="width:14px; height:14px;"></i> Show Marks
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="window.setAllParentsMarksVisibility(false)" style="background:#fee2e2; color:#b91c1c; border:none; display:flex; align-items:center; gap:0.35rem;" title="Hide marks for all parents">
+                            <i data-lucide="eye-off" style="width:14px; height:14px;"></i> Hide Marks
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="window.setAllParentsCasVisibility(true)" style="background:#ecfdf5; color:#047857; border:none; display:flex; align-items:center; gap:0.35rem;" title="Show CAS for all parents">
+                            <i data-lucide="award" style="width:14px; height:14px;"></i> Show CAS
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="window.setAllParentsCasVisibility(false)" style="background:#fef2f2; color:#991b1b; border:none; display:flex; align-items:center; gap:0.35rem;" title="Hide CAS for all parents">
+                            <i data-lucide="lock" style="width:14px; height:14px;"></i> Hide CAS
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="window.openAddParentForm()">
+                            <i data-lucide="user-plus" style="width:14px; height:14px;"></i> Add Parent
+                        </button>
+                    </div>
+                </div>
+                <div class="search-wrap" style="margin-bottom: 1rem;">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="parent-search" class="search-input" placeholder="Search by parent or student name..." oninput="window.renderParents()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter by Class</label>
+                    <select id="parent-class-filter" class="form-input" onchange="window.renderParents()">
+                        <option value="">All Classes</option>
+                    </select>
+                </div>
+                <div id="parents-list"></div>
+            </div>
+
+            <div id="tab-students" class="tab-content">
+                <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2 style="margin:0">Students</h2>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="btn btn-secondary btn-sm" onclick="window.exportStudents()" style="background:#e0e7ff; color:var(--primary);">
+                            <i data-lucide="download" style="width:14px; height:14px;"></i> Export
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="document.getElementById('student-import-input').click()">
+                            <i data-lucide="upload" style="width:14px; height:14px;"></i> Import
+                        </button>
+                        <input type="file" id="student-import-input" style="display:none" accept=".xlsx, .xls" onchange="window.handleStudentImport(event)">
+                    </div>
+                </div>
+                <div class="search-wrap">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="student-search" class="search-input" placeholder="Search by name..." oninput="applyStudentFilters()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter by Class</label>
+                    <select id="student-class-filter" class="form-input" onchange="applyStudentFilters()">
+                        <option value="">All Classes</option>
+                    </select>
+                </div>
+                <div id="students-list"></div>
+                <div style="text-align:center; margin-top:1.5rem;">
+                    <button id="load-more-students" class="btn btn-ghost" onclick="window.loadMoreStudents()" style="display:none;">Load More Students</button>
+                </div>
+            </div>
+
+            <!-- ATTENDANCE TAB -->
+            <div id="tab-attendance" class="tab-content">
+                <h2>Attendance Records</h2>
+                <div class="form-group">
+                    <label class="form-label">Select Date</label>
+                <input type="text" id="att-date" class="form-input nepali-date-picker" onchange="window.loadAttendanceData()" readonly>
+            </div>
+                <div class="form-group">
+                    <label class="form-label">Filter by Class</label>
+                    <select id="att-class-filter" class="form-input" onchange="window.loadAttendanceData(true)">
+                        <option value="">All Classes</option>
+                    </select>
+                </div>
+                <div id="attendance-table-wrap"></div>
+            </div>
+
+            <div id="tab-marks" class="tab-content">
+                <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2 style="margin:0">Student Marks</h2>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="btn btn-secondary btn-sm" onclick="window.exportEduScoreAdmin('theory')" style="background:#fce7f3; color:#db2777;" title="Export Theory Marks for EduScore">
+                            <i data-lucide="download" style="width:14px; height:14px;"></i> EduScore Theory
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="window.exportEduScoreAdmin('practical')" style="background:#fce7f3; color:#db2777;" title="Export Practical Marks for EduScore">
+                            <i data-lucide="download" style="width:14px; height:14px;"></i> EduScore Practical
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="window.exportMarksExcel()" style="background:#e0e7ff; color:var(--primary);">
+                            <i data-lucide="download" style="width:14px; height:14px;"></i> Export All
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="document.getElementById('admin-marks-import').click()">
+                            <i data-lucide="upload" style="width:14px; height:14px;"></i> Import
+                        </button>
+                        <input type="file" id="admin-marks-import" style="display:none" accept=".xlsx,.xls" onchange="window.adminImportMarks(event)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Select Class</label>
+                    <select id="marks-class" class="form-input" onchange="loadMarksData()">
+                        <option value="">All Classes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Select Term</label>
+                    <select id="marks-term" class="form-input" onchange="loadMarksData()">
+                        <option value="">All Terms</option>
+                        <option value="First Mid Term">First Mid Term</option>
+                        <option value="First Term">First Term</option>
+                        <option value="Second Mid Term">Second Mid Term</option>
+                        <option value="Second Term">Second Term</option>
+                        <option value="Third Mid Term">Third Mid Term</option>
+                        <option value="Final Term">Final Term</option>
+                    </select>
+                </div>
+                <div id="marks-table-wrap"></div>
+            </div>
+
+            <!-- CAS TAB (Class 1-5 Continuous Assessment System) -->
+            <div id="tab-cas" class="tab-content">
+                <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <div>
+                        <h2 style="margin:0">CAS (Class 1-5)</h2>
+                        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Continuous Assessment System based on CDC Nepal guidelines.</p>
+                    </div>
+                </div>
+                
+                <!-- Selectors -->
+                <div class="card" style="padding:1rem; margin-bottom:1rem;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Class (1-5)</label>
+                            <select id="cas-class" class="form-input" onchange="window.onCasClassChange()">
+                                <option value="">-- Class --</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Student</label>
+                            <select id="cas-student" class="form-input" onchange="window.loadCASData()">
+                                <option value="">-- Student --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem;">
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Term</label>
+                            <select id="cas-term" class="form-input" onchange="window.loadCASData()">
+                                <option value="First Term">First Term</option>
+                                <option value="Second Term">Second Term</option>
+                                <option value="Final Term">Final Term</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Subject</label>
+                            <select id="cas-subject" class="form-input" onchange="window.onCasSubjectChange()">
+                                <option value="">-- Subject --</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Theme / Area</label>
+                            <select id="cas-theme" class="form-input" onchange="window.loadCASData()">
+                                <option value="">-- Theme --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert for Grades not supported -->
+                <div id="cas-unsupported-alert" style="display:none; background:#fee2e2; color:#dc2626; padding:1rem; border-radius:8px; text-align:center; font-size:0.85rem;">
+                    CAS is only available for Grades 1 through 5.
+                </div>
+
+                <!-- Result & Grid -->
+                <div id="cas-content-wrap">
+                    <div style="text-align:center; padding:2rem; color:var(--text-muted); font-size:0.85rem;">
+                        Please select Class, Student, Subject, and Theme to load evaluations.
+                    </div>
+                </div>
+            </div>
+
+            <!-- REPORTS TAB -->
+            <div id="tab-reports" class="tab-content">
+                <h2>Bulk Reports</h2>
+                
+                <div class="card" style="margin-bottom:1.5rem; padding:1.25rem;">
+                    <h3 style="margin-bottom:1rem; font-size:1rem; display:flex; align-items:center; gap:0.5rem;">
+                        <i data-lucide="calendar-check" style="width:20px; height:20px; color:var(--primary);"></i>
+                        Attendance Report (Range)
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">Class</label>
+                        <select id="report-att-class" class="form-input">
+                            <option value="">All Classes</option>
+                        </select>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Start Date</label>
+                            <input type="text" id="report-att-start" class="form-input nepali-date-picker" readonly>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">End Date</label>
+                            <input type="text" id="report-att-end" class="form-input nepali-date-picker" readonly>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="window.exportAttendanceRangeExcel()">
+                        <i data-lucide="download"></i> Export Attendance
+                    </button>
+                </div>
+
+                <div class="card" style="margin-bottom:1.5rem; padding:1.25rem;">
+                    <h3 style="margin-bottom:1rem; font-size:1rem; display:flex; align-items:center; gap:0.5rem;">
+                        <i data-lucide="calendar" style="width:20px; height:20px; color:var(--primary);"></i>
+                        Nepali Monthly Attendance Report
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">Class</label>
+                        <select id="report-nepali-att-class" class="form-input">
+                            <option value="">All Classes</option>
+                        </select>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Nepali Year</label>
+                            <select id="report-nepali-att-year" class="form-input"></select>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Nepali Month</label>
+                            <select id="report-nepali-att-month" class="form-input"></select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="window.exportNepaliMonthlyAttendance()">
+                        <i data-lucide="download"></i> Export Monthly Attendance
+                    </button>
+                </div>
+
+                <div class="card" style="padding:1.25rem; margin-bottom:1.5rem;">
+                    <h3 style="margin-bottom:1rem; font-size:1rem; display:flex; align-items:center; gap:0.5rem;">
+                        <i data-lucide="book-open" style="width:20px; height:20px; color:var(--primary);"></i>
+                        Homework Report
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">Class</label>
+                        <select id="report-hw-class" class="form-input">
+                            <option value="">All Classes</option>
+                        </select>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Start Date</label>
+                            <input type="text" id="report-hw-start" class="form-input nepali-date-picker" readonly>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">End Date</label>
+                            <input type="text" id="report-hw-end" class="form-input nepali-date-picker" readonly>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="window.exportHomeworkRangeExcel()">
+                        <i data-lucide="download"></i> Export Homework
+                    </button>
+                </div>
+
+                <div class="card" style="padding:1.25rem;">
+                    <h3 style="margin-bottom:1rem; font-size:1rem; display:flex; align-items:center; gap:0.5rem;">
+                        <i data-lucide="users" style="width:20px; height:20px; color:var(--primary);"></i>
+                        Teacher Directory Report
+                    </h3>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.25rem;">Export complete teacher list, credentials, and assigned classes.</p>
+                    <button class="btn btn-primary btn-block" onclick="window.exportTeachers()">
+                        <i data-lucide="download"></i> Export Teacher Directory
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- NOTICES TAB -->
+            <div id="tab-notices" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <div>
+                        <h2 style="margin:0;">Notice Board</h2>
+                        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">General notices for the public login screen. Use the <b>Messages</b> tab for targeted notices to parents.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.openAddNoticeModal()">
+                        <i data-lucide="plus" style="width:18px;height:18px;"></i> New Notice
+                    </button>
+                </div>
+                <!-- Notice Banner Preview -->
+                <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed); border-radius:12px; padding:1rem 1.1rem; margin-bottom:1rem; color:white;">
+                    <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; opacity:0.7; margin-bottom:0.3rem;">&#128226; Login Screen Notice Board</div>
+                    <div style="font-size:0.82rem; opacity:0.85;">Active notices are displayed on the school login page for all users to see before signing in.</div>
+                </div>
+                <div id="notices-admin-list">
+                    <div style="text-align:center; padding:2rem; color:var(--text-muted);">Loading notices&hellip;</div>
+                </div>
+            </div>
+
+            <!-- MESSAGES TAB -->
+            <div id="tab-messages" class="tab-content">
+                <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2 style="margin:0">Send Message</h2>
+                </div>
+
+                <!-- Message Target Selector -->
+                <div class="card" style="margin-bottom:1rem; padding:1.1rem;">
+                    <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:0.75rem;">Who should receive this message?</div>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        <button id="msg-target-school" class="btn btn-sm btn-primary msg-target-btn" onclick="window.selectMsgTarget('school')" style="flex:1; min-width:90px;">
+                            <i data-lucide="building-2" style="width:14px;height:14px;"></i> Whole School
+                        </button>
+                        <button id="msg-target-class" class="btn btn-sm btn-ghost msg-target-btn" onclick="window.selectMsgTarget('class')" style="flex:1; min-width:90px;">
+                            <i data-lucide="users-2" style="width:14px;height:14px;"></i> A Class
+                        </button>
+                        <button id="msg-target-individual" class="btn btn-sm btn-ghost msg-target-btn" onclick="window.selectMsgTarget('individual')" style="flex:1; min-width:90px;">
+                            <i data-lucide="user" style="width:14px;height:14px;"></i> Student
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Class Selector (shown for class/individual) -->
+                <div id="msg-class-group" class="form-group" style="display:none;">
+                    <label class="form-label">Select Class</label>
+                    <select id="msg-class" class="form-input" onchange="window.onMsgClassChange()">
+                        <option value="">-- Select Class --</option>
+                    </select>
+                </div>
+
+                <!-- Student Selector (shown for individual) -->
+                <div id="msg-student-group" class="form-group" style="display:none;">
+                    <label class="form-label">Select Student</label>
+                    <select id="msg-student" class="form-input">
+                        <option value="">-- Select Student --</option>
+                    </select>
+                </div>
+
+                <!-- Message Form -->
+                <div class="form-group">
+                    <label class="form-label">Subject</label>
+                    <input type="text" id="msg-subject" class="form-input" placeholder="e.g. Parent-Teacher Meeting Tomorrow">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message</label>
+                    <textarea id="msg-body" class="form-input" rows="5" placeholder="Type your message here&hellip;"></textarea>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="window.sendMessage()">
+                    <i data-lucide="send" style="width:16px;height:16px;"></i> Send Message
+                </button>
+
+                <!-- Sent Messages Log -->
+                <div style="margin-top:1.5rem;">
+                    <h3 style="font-size:0.9rem; margin-bottom:0.75rem; color:var(--text-muted);">Recently Sent</h3>
+                    <div id="sent-messages-list">
+                        <div style="text-align:center; padding:1.5rem; color:var(--text-muted); font-size:0.85rem;">Loading&hellip;</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-activity" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2 style="margin:0">Activity Tracking</h2>
+                    <div class="tab-nav-mini" style="display:flex; gap:0.5rem; background:#f1f5f9; padding:0.25rem; border-radius:0.5rem;">
+                        <button class="btn btn-sm btn-ghost active" id="btn-teacher-logs" onclick="window.switchActivityView('teacher')">Teachers</button>
+                        <button class="btn btn-sm btn-ghost" id="btn-student-trace" onclick="window.switchActivityView('student')">Student Trace</button>
+                    </div>
+                </div>
+
+                <!-- TEACHER LOGS VIEW -->
+                <div id="view-teacher-logs">
+                    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
+                        <select id="activity-teacher-filter" class="form-input" style="flex:1" onchange="window.loadActivityLog(true, this.value)">
+                            <option value="">All Teachers</option>
+                        </select>
+                        <input type="text" id="activity-date-filter" class="form-input nepali-date-picker" style="flex:1" onchange="window.loadActivityLog(true)" readonly>
+                    </div>
+                    <div id="activity-summary" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem"></div>
+                    <div id="activity-feed"></div>
+                </div>
+
+                <!-- STUDENT TRACE VIEW -->
+                <div id="view-student-trace" style="display:none;">
+                    <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+                        <select id="trace-class-filter" class="form-input" style="flex:1; min-width:100px;" onchange="window.populateTraceStudents()">
+                            <option value="">Class</option>
+                        </select>
+                        <select id="trace-student-select" class="form-input" style="flex:2; min-width:150px;" onchange="window.loadStudentTrace()">
+                            <option value="">Select Student</option>
+                        </select>
+                        <input type="text" id="trace-date-filter" class="form-input nepali-date-picker" style="flex:1; min-width:150px;" onchange="window.loadStudentTrace()" readonly>
+                    </div>
+                    <div id="student-trace-content">
+                        <div class="empty-state">
+                            <i data-lucide="user-search" style="width:48px; height:48px; opacity:0.3; margin-bottom:1rem;"></i>
+                            <p>Select a student to view their complete activity history.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="tab-leave" class="tab-content">
+                <div class="section-header">
+                    <h2>Leave Applications</h2>
+                    <p>Overview of all student leave requests</p>
+                </div>
+                <div id="admin-leave-list" style="margin-top:1rem">
+                    <p style="text-align:center;padding:2rem;color:var(--text-muted)">Loading applications...</p>
+                </div>
+            </div>
+            
+            <!-- PRACTICAL MARKS TAB -->
+            <div id="tab-practicalmarks" class="tab-content">
+                <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2 style="margin:0">Practical Marks</h2>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="btn btn-primary btn-sm" onclick="window.adminExportEduScore()">
+                            <i data-lucide="download" style="width:14px; height:14px;"></i> Export EduScore
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Select Class</label>
+                    <select id="practicalmarks-class" class="form-input" onchange="window.loadAdminPracticalMarksData()">
+                        <option value="">-- Select Class --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Select Term</label>
+                    <select id="practicalmarks-term" class="form-input" onchange="window.loadAdminPracticalMarksData()">
+                        <option value="First Term">First Term</option>
+                        <option value="Second Term">Second Term</option>
+                        <option value="Final Term">Final Term</option>
+                    </select>
+                </div>
+                <div id="practicalmarks-table-wrap"></div>
+            </div>
+            
+            <!-- MORE TAB -->
+            <div id="tab-more" class="tab-content">
+                <div class="section-header">
+                    <h2>More Options</h2>
+                    <p>Manage system settings and additional administrative portals</p>
+                </div>
+                
+                <div class="more-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
+                    <!-- Teachers -->
+                    <div class="card" onclick="window.switchTab('teachers')" style="padding:1.25rem; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; gap:0.5rem; border:1px solid #e2e8f0; border-radius:16px;">
+                        <div style="background:#fef3c7; color:#d97706; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                            <i data-lucide="users" style="width:22px; height:22px;"></i>
+                        </div>
+                        <h3 style="font-size:0.95rem; font-weight:800; margin:0;">Teachers</h3>
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0;">Manage profiles & classes</p>
+                    </div>
+
+                    <!-- Parents -->
+                    <div class="card" onclick="window.switchTab('parents')" style="padding:1.25rem; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; gap:0.5rem; border:1px solid #e2e8f0; border-radius:16px;">
+                        <div style="background:#dbeafe; color:#2563eb; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                            <i data-lucide="user-plus" style="width:22px; height:22px;"></i>
+                        </div>
+                        <h3 style="font-size:0.95rem; font-weight:800; margin:0;">Parents</h3>
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0;">View parent credentials</p>
+                    </div>
+
+                    <!-- Notices -->
+                    <div class="card" onclick="window.switchTab('notices')" style="padding:1.25rem; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; gap:0.5rem; border:1px solid #e2e8f0; border-radius:16px;">
+                        <div style="background:#e0e7ff; color:#4f46e5; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                            <i data-lucide="megaphone" style="width:22px; height:22px;"></i>
+                        </div>
+                        <h3 style="font-size:0.95rem; font-weight:800; margin:0;">Notices</h3>
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0;">Login Screen Notice Board</p>
+                    </div>
+
+                    <!-- Messages -->
+                    <div class="card" onclick="window.switchTab('messages')" style="padding:1.25rem; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; gap:0.5rem; border:1px solid #e2e8f0; border-radius:16px;">
+                        <div style="background:#dcfce7; color:#16a34a; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; position:relative;">
+                            <i data-lucide="send" style="width:22px; height:22px;"></i>
+                            <span id="more-badge-messages" class="badge-notify" style="top:-2px; right:-2px; display:none;"></span>
+                        </div>
+                        <h3 style="font-size:0.95rem; font-weight:800; margin:0;">Messages</h3>
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0;">Broadcast targeted alerts</p>
+                    </div>
+
+                    <!-- Leave -->
+                    <div class="card" onclick="window.switchTab('leave')" style="padding:1.25rem; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; gap:0.5rem; border:1px solid #e2e8f0; border-radius:16px;">
+                        <div style="background:#fee2e2; color:#dc2626; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; position:relative;">
+                            <i data-lucide="file-text" style="width:22px; height:22px;"></i>
+                            <span id="more-badge-leave" class="badge-notify" style="top:-2px; right:-2px; display:none;"></span>
+                        </div>
+                        <h3 style="font-size:0.95rem; font-weight:800; margin:0;">Leave</h3>
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0;">Review student requests</p>
+                    </div>
+
+                    <!-- Subjects -->
+                    <div class="card" onclick="window.openSubjectsModal()" style="padding:1.25rem; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; gap:0.5rem; border:1px solid #e2e8f0; border-radius:16px;">
+                        <div style="background:#f1f5f9; color:#475569; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                            <i data-lucide="book-open" style="width:22px; height:22px;"></i>
+                        </div>
+                        <h3 style="font-size:0.95rem; font-weight:800; margin:0;">Subjects</h3>
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0;">Manage subjects list</p>
+                    </div>
+
+                    <!-- Activity -->
+                    <div class="card" onclick="window.switchTab('activity')" style="padding:1.25rem; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; gap:0.5rem; border:1px solid #e2e8f0; border-radius:16px;">
+                        <div style="background:#fae8ff; color:#c084fc; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                            <i data-lucide="activity" style="width:22px; height:22px;"></i>
+                        </div>
+                        <h3 style="font-size:0.95rem; font-weight:800; margin:0;">Activity Log</h3>
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0;">Audit teacher sessions</p>
+                    </div>
+
+                    <!-- Reports -->
+                    <div class="card" onclick="window.switchTab('reports')" style="padding:1.25rem; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; gap:0.5rem; border:1px solid #e2e8f0; border-radius:16px;">
+                        <div style="background:#e0f2fe; color:#0284c7; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                            <i data-lucide="file-spreadsheet" style="width:22px; height:22px;"></i>
+                        </div>
+                        <h3 style="font-size:0.95rem; font-weight:800; margin:0;">Reports</h3>
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0;">Excel range exports</p>
+                    </div>
+
+                    <!-- Practical Marks -->
+                    <div class="card" onclick="window.switchTab('practicalmarks')" style="padding:1.25rem; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; gap:0.5rem; border:1px solid #e2e8f0; border-radius:16px;">
+                        <div style="background:#fce7f3; color:#ec4899; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                            <i data-lucide="bar-chart-4" style="width:22px; height:22px;"></i>
+                        </div>
+                        <h3 style="font-size:0.95rem; font-weight:800; margin:0;">Practical Marks</h3>
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0;">Export EduScore practicals</p>
+                    </div>
+
+                    <!-- CAS System -->
+                    <div class="card" onclick="window.switchTab('cas')" style="padding:1.25rem; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; gap:0.5rem; border:1px solid #e2e8f0; border-radius:16px;">
+                        <div style="background:#ecfdf5; color:#10b981; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                            <i data-lucide="award" style="width:22px; height:22px;"></i>
+                        </div>
+                        <h3 style="font-size:0.95rem; font-weight:800; margin:0;">CAS (Class 1-5)</h3>
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0;">Continuous Assessment</p>
+                    </div>
+                </div>
+
+                <div style="margin-top:2rem; padding:1rem 0; text-align:center; border-top:1px solid #e2e8f0;">
+                    <p style="font-size:0.7rem; color:var(--text-muted); font-weight:500; margin:0;">
+                        System designed & developed by<br>
+                        <strong style="color:var(--text-main); font-weight:700;">Rexsh K Suwal</strong>, Computer Engineer
+                    </p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav admin-nav">
+            <a href="#" class="nav-item active" data-view="admin-dashboard">
+                <div class="nav-icon-wrap"><i data-lucide="layout-dashboard" class="nav-icon"></i></div>
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item" data-view="admin-students">
+                <div class="nav-icon-wrap"><i data-lucide="users-2" class="nav-icon"></i></div>
+                <span>Students</span>
+            </a>
+            <a href="#" class="nav-item" data-view="admin-attendance">
+                <div class="nav-icon-wrap"><i data-lucide="calendar-check" class="nav-icon"></i></div>
+                <span>Attendance</span>
+            </a>
+            <a href="#" class="nav-item" data-view="admin-marks">
+                <div class="nav-icon-wrap"><i data-lucide="bar-chart-3" class="nav-icon"></i></div>
+                <span>Marks</span>
+            </a>
+            <a href="#" class="nav-item" data-view="admin-more">
+                <div class="nav-icon-wrap" style="position:relative">
+                    <i data-lucide="more-horizontal" class="nav-icon"></i>
+                    <span id="badge-more" class="badge-notify" style="display:none"></span>
+                </div>
+                <span>More</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="modal-overlay" onclick="window.closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <button class="modal-close-btn" onclick="window.closeModal()"><i data-lucide="x"></i></button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+
+    <!-- Admin App Logic -->
+    <!-- Admin App Logic -->
+    <script type="module" src="admin-app.js"></script>
+
+</body>
+</html>

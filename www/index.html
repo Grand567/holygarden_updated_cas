@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Holy Garden English Secondary School - Teacher App</title>
+    <meta name="description"
+        content="Student record, attendance, and homework management for Holy Garden English Secondary School teachers.">
+    <link rel="stylesheet" href="styles.css?v=1.1.0">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="apple-touch-icon" href="192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="HG Emis">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase UMD -->
+    <script src="libs/supabase.umd.js"></script>
+    <!-- Lucide Icons -->
+    <script src="libs/lucide.min.js"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="libs/xlsx.full.min.js"></script>
+    <!-- Nepali Date Picker -->
+    <link href="./nepali.datepicker.v3.0.0.min.css" rel="stylesheet" type="text/css"/>
+    <script src="./nepali.datepicker.v3.0.0.min.js" type="text/javascript"></script>
+    <!-- CAS Configuration -->
+    <script src="cas-config.js"></script>
+
+</head>
+
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+        <img src="512.png" alt="School Logo" class="splash-logo">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div>
+                    <p style="font-size:0.65rem; color:var(--primary); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.2rem">Holy Garden English Secondary School</p>
+                    <h1 id="view-title" style="font-size:1.25rem">Teacher App</h1>
+                </div>
+                <div id="user-info" style="display:flex; gap:0.5rem; align-items:center;">
+                    <button class="btn btn-ghost btn-icon" onclick="window.openChangePasswordModal()" title="Change Password" style="color:var(--primary); padding: 0; width: 36px; height: 36px; background: var(--primary-light); border-radius: 50%;">
+                        <i data-lucide="key-round" style="width: 18px; height: 18px;"></i>
+                    </button>
+                    <button class="btn btn-ghost btn-icon" onclick="window.logout()" title="Logout" style="color:var(--error); padding: 0; width: 36px; height: 36px; background: var(--error-light); border-radius: 50%;">
+                        <i data-lucide="log-out" style="width: 18px; height: 18px;"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+
+        <!-- Dynamic Content Area -->
+        <main id="main-content" class="container">
+            <!-- Content injected by app.js -->
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav teacher-nav">
+            <a href="#" class="nav-item active" data-view="dashboard" id="nav-dashboard">
+                <i data-lucide="layout-dashboard" class="nav-icon"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item" data-view="attendance" id="nav-attendance">
+                <i data-lucide="calendar-check" class="nav-icon"></i>
+                <span>Attendance</span>
+            </a>
+            <a href="#" class="nav-item" data-view="homework" id="nav-homework">
+                <i data-lucide="book-open" class="nav-icon"></i>
+                <span>Homework</span>
+            </a>
+            <a href="#" class="nav-item" data-view="practicalmarks" id="nav-practicalmarks">
+                <i data-lucide="flask-conical" class="nav-icon"></i>
+                <span>Practical</span>
+            </a>
+            <a href="#" class="nav-item" data-view="messages" id="nav-messages">
+                <div class="nav-icon-wrap" style="position:relative">
+                    <i data-lucide="message-square" class="nav-icon"></i>
+                    <span id="badge-messages" class="badge-notify"></span>
+                </div>
+                <span>Messages</span>
+            </a>
+            <a href="#" class="nav-item" data-view="more" id="nav-more">
+                <div class="nav-icon-wrap" style="position:relative">
+                    <i data-lucide="more-horizontal" class="nav-icon"></i>
+                    <span id="badge-more" class="badge-notify"></span>
+                </div>
+                <span>More</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="modal-overlay" onclick="window.closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <button class="modal-close-btn" onclick="window.closeModal()"><i data-lucide="x"></i></button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- App Logic (core first, then views) -->
+    <script type="module" src="app-core.js"></script>
+    <script type="module" src="app-views.js"></script>
+
+    <!-- Register Service Worker for PWA / Android Installability -->
+    <script>
+        (async function() {
+            // Simplified Service Worker registration. 
+            // Version checking and cache nuking is now handled by shared.js during startup.
+            if ('serviceWorker' in navigator) {
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (!refreshing) {
+                        refreshing = true;
+                        window.location.reload();
+                    }
+                });
+
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js').then(registration => {
+                        console.log('ServiceWorker registration successful');
+                        registration.update();
+                    }).catch(err => {
+                        console.error('ServiceWorker registration failed: ', err);
+                    });
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>

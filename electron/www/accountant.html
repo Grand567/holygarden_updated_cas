@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Accountant Portal - Holy Garden</title>
+    <!-- Responsive Separate Stylesheets for Desktop vs Mobile -->
+    <link rel="stylesheet" href="accountant-mobile.css?v=1.3.0" media="only screen and (max-width: 768px)">
+    <link rel="stylesheet" href="accountant-desktop.css?v=1.3.0" media="only screen and (min-width: 769px)">
+    <meta name="theme-color" content="#4f46e5">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="libs/supabase.umd.js"></script>
+    <script src="libs/lucide.min.js"></script>
+    <script src="libs/xlsx.full.min.js"></script>
+    <!-- Nepali Date Picker -->
+    <link href="./nepali.datepicker.v3.0.0.min.css" rel="stylesheet" type="text/css"/>
+    <script src="./nepali.datepicker.v3.0.0.min.js" type="text/javascript"></script>
+</head>
+<body>
+    <div id="splash-screen" class="splash-screen">
+        <div class="spinner"></div>
+    </div>
+    
+    <div id="app">
+        <header class="header no-print">
+            <div class="header-content">
+                <div>
+                    <p style="font-size:0.65rem; color:var(--primary); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.2rem">Holy Garden English Secondary School</p>
+                    <h1 id="view-title" style="font-size:1.25rem">Accountant Portal</h1>
+                </div>
+                <button class="btn btn-ghost btn-icon" onclick="window.logout()" title="Logout" style="color:var(--error); background:var(--error-light); border-radius:50%; width:36px; height:36px; padding:0;">
+                    <i data-lucide="log-out" style="width:18px; height:18px;"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="container no-print" style="padding-top:1.5rem; padding-bottom:80px;">
+            <!-- Dashboard Tab -->
+            <div id="tab-dashboard" class="tab-content active">
+                <!-- 2x2 Grid Section -->
+                <div class="stats-grid">
+                    <div class="card" style="padding:1rem; border-left:4px solid #10b981; margin:0; display:flex; flex-direction:column; justify-content:center; height:85px;">
+                        <div style="color:var(--text-muted); font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.02em;">Today's Income</div>
+                        <div id="today-collection" style="font-size:1.3rem; font-weight:800; color:#16a34a; margin-top:0.2rem;">Rs. 0</div>
+                    </div>
+                    <div class="card" style="padding:1rem; border-left:4px solid #3b82f6; margin:0; display:flex; flex-direction:column; justify-content:center; height:85px;">
+                        <div style="color:var(--text-muted); font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.02em;">Monthly Income</div>
+                        <div id="month-collection" style="font-size:1.3rem; font-weight:800; color:#2563eb; margin-top:0.2rem;">Rs. 0</div>
+                    </div>
+                    <div class="card" style="padding:1rem; border-left:4px solid #ef4444; margin:0; display:flex; flex-direction:column; justify-content:center; height:85px;">
+                        <div style="color:var(--text-muted); font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.02em;">Total Dues</div>
+                        <div id="total-outstanding" style="font-size:1.3rem; font-weight:800; color:#dc2626; margin-top:0.2rem;">Rs. 0</div>
+                    </div>
+                    <div class="card" style="padding:1rem; border-left:4px solid #f59e0b; margin:0; display:flex; flex-direction:column; justify-content:center; height:85px;">
+                        <div style="color:var(--text-muted); font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.02em;">Monthly Expenses</div>
+                        <div id="month-expenditure" style="font-size:1.3rem; font-weight:800; color:#d97706; margin-top:0.2rem;">Rs. 0</div>
+                    </div>
+                </div>
+
+
+                <div style="display:flex; flex-wrap:wrap; gap:1.5rem;">
+                    <!-- Quick Actions First (stacks on top on mobile) -->
+                    <div style="flex: 1 1 200px;">
+                        <h3 style="margin-bottom:1rem; font-size:1rem;">Quick Actions</h3>
+                        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                            <button class="btn btn-primary btn-block" style="padding:1.1rem; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(79,70,229,0.25);" onclick="window.switchTab('fees')">
+                                <i data-lucide="plus-circle" style="width:20px; height:20px; margin-right:8px;"></i> Quick Collection
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Transactions Second -->
+                    <div style="flex: 1 1 300px;">
+                        <h3 style="margin-bottom:1rem; font-size:1rem; display:flex; align-items:center; gap:0.5rem;">
+                            <i data-lucide="clock" style="width:18px; height:18px; color:var(--primary);"></i> Recent Transactions
+                        </h3>
+                        <div class="card" style="padding:0; overflow-x:auto;">
+                            <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                                <thead style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                                    <tr>
+                                        <th style="padding:0.75rem 1rem; text-align:left;">Date</th>
+                                        <th style="padding:0.75rem 1rem; text-align:left;">Student</th>
+                                        <th style="padding:0.75rem 1rem; text-align:left;" class="hide-mobile">Voucher</th>
+                                        <th style="padding:0.75rem 1rem; text-align:right;">Amount</th>
+                                        <th style="padding:0.75rem 1rem; text-align:right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-transactions-list">
+                                    <tr><td colspan="5" style="padding:2rem; text-align:center; color:var(--text-muted);">No transactions recorded today.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fees Tab (Students & Ledger) -->
+            <div id="tab-fees" class="tab-content">
+                <div class="card" style="padding:1rem; margin-bottom:1.5rem; background:linear-gradient(to right, #f8fafc, #fff);">
+                    <div style="display:flex; gap:0.75rem; align-items:center;">
+                        <i data-lucide="search" style="color:var(--text-muted); width:20px;"></i>
+                        <input type="text" id="student-search" class="form-input" placeholder="Search by Student Name or Class..." style="border:none; background:transparent; padding:0.5rem 0; font-size:1rem; box-shadow:none;">
+                    </div>
+                </div>
+                <div id="students-list" class="fee-cards"></div>
+                <div style="text-align:center; margin-top:1.5rem;">
+                    <button id="load-more-students" class="btn btn-ghost" onclick="window.loadMoreStudents()" style="display:none;">Load More Students</button>
+                </div>
+            </div>
+
+            <!-- Expenses Tab (Expenditure) -->
+            <div id="tab-expenses" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <h2 style="font-size:1.2rem;">Expenditure Ledger</h2>
+                    <button class="btn btn-primary" onclick="window.openAddExpenseModal()">
+                        <i data-lucide="plus" style="width:18px; height:18px; margin-right:6px;"></i> Record Expense
+                    </button>
+                </div>
+                <div class="card" style="padding:0; overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                        <thead style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                            <tr>
+                                <th style="padding:0.75rem 1rem; text-align:left;">Date</th>
+                                <th style="padding:0.75rem 1rem; text-align:left;">Category</th>
+                                <th style="padding:0.75rem 1rem; text-align:left;">Description</th>
+                                <th style="padding:0.75rem 1rem; text-align:right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenditure-list">
+                            <tr><td colspan="4" style="padding:2rem; text-align:center; color:var(--text-muted);">No expenses recorded.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="text-align:center; margin-top:1.5rem;">
+                    <button id="load-more-expenses" class="btn btn-ghost" onclick="window.loadMoreExpenses()" style="display:none;">Load More Expenses</button>
+                </div>
+            </div>
+
+            <!-- Reports Tab (Audit Ledger) -->
+            <div id="tab-reports" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:1rem;">
+                    <div>
+                        <h2 style="font-size:1.2rem; margin:0;">School Audit Ledger</h2>
+                        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Unified cashbook of all incoming fees and outgoing expenditures.</p>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                        <input type="text" id="audit-start-date" class="form-input nepali-date-picker" style="padding:0.5rem; width:130px;" placeholder="Start Date" readonly>
+                        <span style="color:var(--text-muted); font-size:0.8rem;">to</span>
+                        <input type="text" id="audit-end-date" class="form-input nepali-date-picker" style="padding:0.5rem; width:130px;" placeholder="End Date" readonly>
+                        <button class="btn btn-ghost btn-icon" onclick="window.loadAuditLedger()" title="Refresh Ledger" style="border:1px solid var(--border);">
+                            <i data-lucide="refresh-cw" style="width:16px; height:16px;"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Income & Expenditure Summary Grid -->
+                <div class="stats-grid" style="margin-bottom:1.5rem;">
+                    <div class="card" style="padding:1rem; border-left:4px solid #16a34a; margin:0; display:flex; flex-direction:column; justify-content:center;">
+                        <div style="color:var(--text-muted); font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.02em;">Total Income (Dr)</div>
+                        <div id="audit-total-income" style="font-size:1.3rem; font-weight:800; color:#16a34a; margin-top:0.2rem;">Rs. 0</div>
+                    </div>
+                    <div class="card" style="padding:1rem; border-left:4px solid #ef4444; margin:0; display:flex; flex-direction:column; justify-content:center;">
+                        <div style="color:var(--text-muted); font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.02em;">Total Expense (Cr)</div>
+                        <div id="audit-total-expense" style="font-size:1.3rem; font-weight:800; color:#ef4444; margin-top:0.2rem;">Rs. 0</div>
+                    </div>
+                    <div class="card" style="padding:1rem; border-left:4px solid #3b82f6; margin:0; display:flex; flex-direction:column; justify-content:center;">
+                        <div style="color:var(--text-muted); font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.02em;">Net Surplus / Deficit</div>
+                        <div id="audit-net-balance" style="font-size:1.3rem; font-weight:800; color:#3b82f6; margin-top:0.2rem;">Rs. 0</div>
+                    </div>
+                </div>
+
+                <!-- Unified Ledger Table -->
+                <div class="card" style="padding:0; overflow-x:auto; margin-bottom:1.5rem;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.85rem; min-width:800px;">
+                        <thead style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
+                            <tr>
+                                <th style="padding:0.75rem 1rem; text-align:left;">Date</th>
+                                <th style="padding:0.75rem 1rem; text-align:left;">Ref / Voucher No.</th>
+                                <th style="padding:0.75rem 1rem; text-align:left;">Particulars (Category / Description)</th>
+                                <th style="padding:0.75rem 1rem; text-align:right; color:#16a34a;">Income (In)</th>
+                                <th style="padding:0.75rem 1rem; text-align:right; color:#ef4444;">Expense (Out)</th>
+                                <th style="padding:0.75rem 1rem; text-align:right;">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-ledger-list">
+                            <tr><td colspan="6" style="padding:2rem; text-align:center; color:var(--text-muted);">Loading ledger records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Export Action Bar -->
+                <div class="card" style="padding:1.2rem; background:linear-gradient(to right, #f8fafc, #fff); border-radius:8px;">
+                    <h3 style="font-size:0.9rem; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                        <i data-lucide="download-cloud" style="width:18px; height:18px; color:var(--primary);"></i> Export Tools
+                    </h3>
+                    <div style="display:flex; flex-wrap:wrap; gap:1rem;">
+                        <!-- Re-integrated Old Export Actions -->
+                        <button class="btn btn-ghost" style="border:1px solid #16a34a; color:#16a34a;" onclick="window.exportAuditLedger()">
+                            <i data-lucide="file-spreadsheet" style="width:16px; height:16px; margin-right:6px;"></i> Export Ledger (.xlsx)
+                        </button>
+                        <button class="btn btn-ghost" style="border:1px solid var(--primary); color:var(--primary);" onclick="window.exportMonthlyReport()">
+                            <i data-lucide="file-spreadsheet" style="width:16px; height:16px; margin-right:6px;"></i> Summary Balance Sheet
+                        </button>
+                        <div style="display:flex; align-items:center; gap:0.5rem; border-left:1px solid var(--border); padding-left:1rem; flex-wrap:wrap;">
+                            <input type="text" id="dues-filter-term" class="form-input" placeholder="Term (e.g. Jan 2026)" style="padding:0.5rem; width:140px; font-size:0.8rem;">
+                            <button class="btn btn-ghost" style="border:1px solid #d97706; color:#d97706;" onclick="window.exportOutstandingReport()">
+                                <i data-lucide="alert-circle" style="width:16px; height:16px; margin-right:6px;"></i> Export Outstanding Dues
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parents Tab -->
+            <div id="tab-parents" class="tab-content">
+                <div class="card" style="padding:1rem; margin-bottom:1.5rem; background:linear-gradient(to right, #f8fafc, #fff);">
+                    <div style="display:flex; gap:0.75rem; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; gap:0.75rem; align-items:center; flex:1;">
+                            <i data-lucide="search" style="color:var(--text-muted); width:20px;"></i>
+                            <input type="text" id="parent-search" class="form-input" placeholder="Search by Parent Name or Linked Child..." style="border:none; background:transparent; padding:0.5rem 0; font-size:1rem; box-shadow:none; width:100%;">
+                        </div>
+                        <button class="btn btn-secondary btn-icon" onclick="window.loadInitialData(true)" style="background:transparent; border:none; box-shadow:none; color:var(--text-muted);" title="Refresh Parents List">
+                            <i data-lucide="refresh-cw" style="width:18px; height:18px;"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="parents-list" class="fee-cards"></div>
+            </div>
+
+            <!-- Messages Tab (Read-only for Accountant) -->
+            <div id="tab-messages" class="tab-content">
+                <div class="section-header" style="margin-bottom:1rem;">
+                    <h2 style="margin:0">School Messages</h2>
+                    <p style="font-size:0.75rem; color:var(--text-muted);">Stay updated with school-wide announcements.</p>
+                </div>
+                <div id="messages-list">
+                    <div style="text-align:center; padding:2rem; color:var(--text-muted);">Loading&hellip;</div>
+                </div>
+            </div>
+
+            <!-- More Tab -->
+            <div id="tab-more" class="tab-content">
+                <div class="card" style="padding:1.5rem; text-align:center; background:linear-gradient(to bottom right, #ffffff 0%, #f8fafc 100%); border-radius:16px; margin-bottom:1.5rem;">
+                    <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-main); margin-bottom:0.25rem;">More Options</h2>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0rem;">Access parent profiles and financial reports.</p>
+                </div>
+                <div class="quick-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div class="card clickable" onclick="window.switchTab('parents')" style="padding: 1.5rem 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin-bottom: 0; border-radius:16px; box-shadow:var(--shadow-sm); cursor:pointer;">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                            <i data-lucide="users" style="width: 24px; height: 24px;"></i>
+                        </div>
+                        <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0.5rem 0 0; color:var(--text-main);">Parents</h3>
+                        <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0;">Parent Directory</p>
+                    </div>
+                    <div class="card clickable" onclick="window.switchTab('reports')" style="padding: 1.5rem 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin-bottom: 0; border-radius:16px; box-shadow:var(--shadow-sm); cursor:pointer;">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: #fce7f3; color: #ec4899; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                            <i data-lucide="pie-chart" style="width: 24px; height: 24px;"></i>
+                        </div>
+                        <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0.5rem 0 0; color:var(--text-main);">Reports</h3>
+                        <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0;">Financial Exports</p>
+                    </div>
+                </div>
+
+                <div style="margin-top:2rem; padding:1rem 0; text-align:center; border-top:1px solid #e2e8f0;">
+                    <p style="font-size:0.7rem; color:var(--text-muted); font-weight:500; margin:0;">
+                        System designed & developed by<br>
+                        <strong style="color:var(--text-main); font-weight:700;">Rexsh K Suwal</strong>, Computer Engineer
+                    </p>
+                </div>
+            </div>
+
+            <!-- Salary Tab -->
+            <div id="tab-salary" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:1rem;">
+                    <div>
+                        <h2 style="font-size:1.2rem; margin:0;">Salary Distribution Voucher</h2>
+                        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Generate and calculate staff payroll vouchers in accordance with IRD Nepal guidelines.</p>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <select id="salary-year" class="form-input" style="width:100px; padding:0.5rem;" onchange="window.loadSalaryData()">
+                            <option value="2083">2083</option>
+                            <option value="2082">2082</option>
+                            <option value="2081">2081</option>
+                            <option value="2080">2080</option>
+                        </select>
+                        <select id="salary-month" class="form-input" style="width:120px; padding:0.5rem;" onchange="window.loadSalaryData()">
+                            <option value="Baisakh">Baisakh</option>
+                            <option value="Jestha">Jestha</option>
+                            <option value="Asar">Asar</option>
+                            <option value="Shrawan">Shrawan</option>
+                            <option value="Bhadra">Bhadra</option>
+                            <option value="Ashwin">Ashwin</option>
+                            <option value="Kartik">Kartik</option>
+                            <option value="Mangsir">Mangsir</option>
+                            <option value="Poush">Poush</option>
+                            <option value="Magh">Magh</option>
+                            <option value="Falgun">Falgun</option>
+                            <option value="Chaitra">Chaitra</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="window.saveSalaryVoucher()" style="padding:0.6rem 1rem;">
+                            <i data-lucide="save" style="width:16px; height:16px;"></i> Record Voucher
+                        </button>
+                    </div>
+                </div>
+
+                <!-- IRD Compliance Info Bar -->
+                <div class="ird-info-bar">
+                    <span class="ird-info-icon">🇳🇵</span>
+                    <div>
+                        <strong>IRD Nepal FY 2081/82 — Progressive Income Tax:</strong>
+                        Tax is calculated on <strong>Gross Earnings</strong> (Basic + Allowances + Bonuses) per IRD rules — not on net-of-advance amounts.
+                        Use the <strong>⚙️ settings</strong> icon per employee to configure filing status, SSF/PF, insurance deductions, and credits.
+                        Click <strong>📊</strong> to view per-slab tax breakdown.
+                    </div>
+                </div>
+
+                <!-- Payroll Grid Card -->
+                <div class="card" style="padding:0; overflow-x:auto; margin-bottom:1.5rem;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.75rem; min-width:1380px;" id="salary-table">
+                        <thead style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
+                            <tr>
+                                <th style="padding:0.5rem; text-align:center; width:40px;">S.N.</th>
+                                <th style="padding:0.5rem; text-align:left; width:80px;">Post</th>
+                                <th style="padding:0.5rem; text-align:left; width:155px;">Name <span style="font-size:0.6rem; font-weight:400; color:var(--text-muted);">(⚙️ tax | 📊 breakdown)</span></th>
+                                <th style="padding:0.5rem; text-align:right; width:90px;">Basic Salary</th>
+                                <th style="padding:0.5rem; text-align:right; width:90px;">Mahangi Bhatta</th>
+                                <th style="padding:0.5rem; text-align:right; width:80px;">Advance (−)</th>
+                                <th style="padding:0.5rem; text-align:right; width:80px;">Other Ded. (−)</th>
+                                <th style="padding:0.5rem; text-align:right; width:80px;">Dashain All.</th>
+                                <th style="padding:0.5rem; text-align:right; width:80px;">Extra Class</th>
+                                <th style="padding:0.5rem; text-align:center; width:120px;">Leave Calc (Days)<br><span style="color:green;font-weight:bold;">Save (+)</span> / <span style="color:red;font-weight:bold;">Loss (−)</span></th>
+                                <th style="padding:0.5rem; text-align:right; width:100px;">Leave Save (+)</th>
+                                <th style="padding:0.5rem; text-align:right; width:100px;">Leave Loss (−)</th>
+                                <th style="padding:0.5rem; text-align:right; width:95px; background:#f1f5f9; color:var(--primary);">Taxable Gross</th>
+                                <th style="padding:0.5rem; text-align:right; width:90px; background:#f1f5f9;">Grand Total</th>
+                                <th style="padding:0.5rem; text-align:right; width:90px; color:#ef4444;">TDS / Income Tax (−)</th>
+                                <th style="padding:0.5rem; text-align:right; width:90px; color:#7c3aed;">Emp. PF/SSF (−)</th>
+                                <th style="padding:0.5rem; text-align:right; width:100px; background:#e0f2fe; font-weight:bold;">Net Payable</th>
+                                <th style="padding:0.5rem; text-align:center; width:55px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salary-rows-container">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                        <tfoot style="background:#f8fafc; border-top:2px solid #e2e8f0; font-weight:bold;">
+                            <tr>
+                                <td colspan="3" style="padding:0.75rem; text-align:right;">Totals:</td>
+                                <td id="salary-total-basic" style="padding:0.75rem; text-align:right;">Rs. 0</td>
+                                <td id="salary-total-mahangi" style="padding:0.75rem; text-align:right;">Rs. 0</td>
+                                <td id="salary-total-advance" style="padding:0.75rem; text-align:right;">Rs. 0</td>
+                                <td id="salary-total-deduction" style="padding:0.75rem; text-align:right;">Rs. 0</td>
+                                <td id="salary-total-dashain" style="padding:0.75rem; text-align:right;">Rs. 0</td>
+                                <td id="salary-total-extra" style="padding:0.75rem; text-align:right;">Rs. 0</td>
+                                <td style="padding:0.75rem;"></td>
+                                <td id="salary-total-leavesave" style="padding:0.75rem; text-align:right;">Rs. 0</td>
+                                <td id="salary-total-leaveloss" style="padding:0.75rem; text-align:right;">Rs. 0</td>
+                                <td id="salary-total-gross" style="padding:0.75rem; text-align:right; background:#f1f5f9; color:var(--primary);">Rs. 0</td>
+                                <td id="salary-total-grand" style="padding:0.75rem; text-align:right; background:#f1f5f9;">Rs. 0</td>
+                                <td id="salary-total-tax" style="padding:0.75rem; text-align:right; color:#ef4444;">Rs. 0</td>
+                                <td id="salary-total-retirement" style="padding:0.75rem; text-align:right; color:#7c3aed;">Rs. 0</td>
+                                <td id="salary-total-net" style="padding:0.75rem; text-align:right; background:#e0f2fe;">Rs. 0</td>
+                                <td style="padding:0.75rem; text-align:center;">
+                                    <button class="btn btn-ghost btn-icon btn-sm" onclick="window.addManualSalaryRow()" title="Add Custom Staff Row" style="color:var(--primary);">
+                                        <i data-lucide="plus-circle" style="width:16px; height:16px;"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Export &amp; Print Actions -->
+                <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+                    <button class="btn btn-ghost" onclick="window.exportSalaryToExcel()" style="border:1px solid var(--border);">
+                        <i data-lucide="file-spreadsheet" style="width:16px; height:16px; color:#16a34a;"></i> Export to Excel
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.printSalaryVoucher()" style="background:#e0e7ff; color:var(--primary);">
+                        <i data-lucide="printer" style="width:16px; height:16px;"></i> Print Voucher Sheet
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav accountant-nav">
+            <a href="#" class="nav-item active" data-tab="dashboard">
+                <div class="nav-icon-wrap"><i data-lucide="layout-dashboard" class="nav-icon"></i></div>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="fees">
+                <div class="nav-icon-wrap"><i data-lucide="receipt" class="nav-icon"></i></div>
+                <span>Fees</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="expenses">
+                <div class="nav-icon-wrap"><i data-lucide="trending-down" class="nav-icon"></i></div>
+                <span>Expenses</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="salary" id="nav-item-salary">
+                <div class="nav-icon-wrap"><i data-lucide="wallet" class="nav-icon"></i></div>
+                <span>Salary</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="messages">
+                <div class="nav-icon-wrap">
+                    <i data-lucide="mail" class="nav-icon"></i>
+                    <div id="badge-messages" class="badge-notify"></div>
+                </div>
+                <span>Messages</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="parents" id="nav-item-parents">
+                <div class="nav-icon-wrap"><i data-lucide="users" class="nav-icon"></i></div>
+                <span>Parents</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="reports" id="nav-item-reports">
+                <div class="nav-icon-wrap"><i data-lucide="pie-chart" class="nav-icon"></i></div>
+                <span>Reports</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="more" id="nav-item-more">
+                <div class="nav-icon-wrap"><i data-lucide="more-horizontal" class="nav-icon"></i></div>
+                <span>More</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal-overlay" class="modal-overlay" onclick="window.closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <button class="modal-close-btn" onclick="window.closeModal()"><i data-lucide="x"></i></button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+
+    <!-- Hidden Print Area -->
+    <div id="print-area" style="display:none;">
+        <div id="receipt-print-template" style="padding: 2rem; font-family: 'Inter', sans-serif; color: #000; width: 100%; max-width: 800px; margin: 0 auto; border: 1px solid #eee;">
+            <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #4f46e5; padding-bottom: 1rem;">
+                <h1 style="margin: 0; color: #4f46e5; font-size: 1.5rem;">Holy Garden English Secondary School</h1>
+                <p style="margin: 5px 0; font-size: 0.8rem; color: #666;">School Management System - Official Receipt</p>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
+                <div>
+                    <h3 style="margin: 0 0 5px 0; font-size: 0.9rem; text-transform: uppercase; color: #888;">Student Details</h3>
+                    <p style="margin: 0; font-weight: 700;" id="print-student-name"></p>
+                    <p style="margin: 0; font-size: 0.85rem;" id="print-student-class"></p>
+                </div>
+                <div style="text-align: right;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 0.9rem; text-transform: uppercase; color: #888;">Receipt Details</h3>
+                    <p style="margin: 0; font-weight: 700;">Date: <span id="print-date"></span></p>
+                    <p style="margin: 0; font-size: 0.85rem;">Receipt #: <span id="print-receipt-id"></span></p>
+                    <p style="margin: 0; font-size: 0.85rem;">Bill #: <span id="print-bill-id"></span></p>
+                </div>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #eee;">
+                        <th style="padding: 10px; text-align: left;">Description</th>
+                        <th style="padding: 10px; text-align: right;">Total Fee</th>
+                        <th style="padding: 10px; text-align: right;">Paid Amount</th>
+                        <th style="padding: 10px; text-align: right;">Balance Due</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee;" id="print-description"></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;" id="print-total"></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-weight: 700; color: #16a34a;" id="print-paid"></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-weight: 700; color: #dc2626;" id="print-due"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 3rem; display: flex; justify-content: space-between;">
+                <div style="text-align: center; width: 200px;">
+                    <div style="border-top: 1px solid #000; padding-top: 5px;">Receiver's Signature</div>
+                </div>
+                <div style="text-align: center; width: 200px;">
+                    <div style="border-top: 1px solid #000; padding-top: 5px;">Office Seal</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 3rem; text-align: center; font-size: 0.75rem; color: #999; border-top: 1px solid #eee; padding-top: 1rem;">
+                This is a computer-generated receipt. No signature required.
+            </div>
+        </div>
+
+        <!-- Statement Print Template -->
+        <div id="statement-print-template" style="display:none; padding: 2rem; font-family: 'Inter', sans-serif; color: #000; width: 100%; max-width: 800px; margin: 0 auto; border: 1px solid #eee;">
+            <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #4f46e5; padding-bottom: 1rem;">
+                <h1 style="margin: 0; color: #4f46e5; font-size: 1.5rem;">Holy Garden English Secondary School</h1>
+                <p style="margin: 5px 0; font-size: 0.8rem; color: #666;">Consolidated Account Statement</p>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
+                <div>
+                    <h3 style="margin: 0 0 5px 0; font-size: 0.9rem; text-transform: uppercase; color: #888;">Parent Details</h3>
+                    <p style="margin: 0; font-weight: 700;" id="st-print-parent-name"></p>
+                    <p style="margin: 0; font-size: 0.85rem;" id="st-print-date"></p>
+                </div>
+                <div style="text-align: right;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 0.9rem; text-transform: uppercase; color: #888;">Summary</h3>
+                    <p style="margin: 0; font-weight: 700; color: #dc2626;">Total Outstanding: <span id="st-print-total-due"></span></p>
+                </div>
+            </div>
+
+            <div id="st-print-children-details">
+                <!-- Populated dynamically -->
+            </div>
+            
+            <div style="margin-top: 3rem; text-align: center; font-size: 0.75rem; color: #999; border-top: 1px solid #eee; padding-top: 1rem;">
+                This is an official account statement. Please contact the school office for any discrepancies.
+            </div>
+        </div>
+
+        <!-- Salary Voucher Print Template -->
+        <div id="salary-print-template" style="display:none; padding: 2rem; font-family: 'Inter', sans-serif; color: #000; width: 100%; max-width: 1000px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 1.5rem; border-bottom: 2px solid #000; padding-bottom: 0.5rem;">
+                <h1 style="margin: 0; color: #000; font-size: 1.6rem; font-weight:800;">Holy Garden English Secondary School</h1>
+                <p style="margin: 3px 0; font-size: 0.75rem; color: #444;">Byasi, Bhaktapur-2 | Tel: 016616748</p>
+                <h2 style="margin: 5px 0 0 0; font-size: 1.1rem; text-transform: uppercase; font-weight:700;" id="print-salary-title">Salary Distribution Voucher For The Month Of Baisakh 2083</h2>
+            </div>
+            
+            <p style="font-size: 0.85rem; font-style: italic; margin-bottom: 1rem;">We the following teachers have received the amount mentioned below from Holy Garden English Secondary School, Byasi, Bhaktapur-2.</p>
+
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.7rem; border: 1px solid #000;">
+                <thead>
+                    <tr style="background: #f1f5f9; border-bottom: 1px solid #000;">
+                        <th style="padding: 6px; text-align: center; border: 1px solid #000; width:30px;">S.N.</th>
+                        <th style="padding: 6px; text-align: left; border: 1px solid #000; width:80px;">Post</th>
+                        <th style="padding: 6px; text-align: left; border: 1px solid #000; width:150px;">Name of the teachers</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:70px;">Basic Salary</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:70px;">Mahangi Bhatta</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:60px;">Advance Salary</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:60px;">Other Deduction</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:60px;">Dashain Allowance</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:60px;">Extra Class</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:65px;">Leave Save (+)</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:65px;">Leave Loss (-)</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:75px; font-weight:bold;">Taxable Gross</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:75px; font-weight:bold;">Grand Total</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:60px;">Govt Tax (-)</th>
+                        <th style="padding: 6px; text-align: right; border: 1px solid #000; width:80px; font-weight:bold;">Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="print-salary-rows">
+                    <!-- Populated dynamically -->
+                </tbody>
+                <tfoot style="font-weight:bold;">
+                    <tr style="border-top: 1px solid #000;">
+                        <td colspan="3" style="padding: 8px 6px; text-align: right; border: 1px solid #000;">Total:</td>
+                        <td id="print-salary-total-basic" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                        <td id="print-salary-total-mahangi" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                        <td id="print-salary-total-advance" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                        <td id="print-salary-total-deduction" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                        <td id="print-salary-total-dashain" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                        <td id="print-salary-total-extra" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                        <td id="print-salary-total-leavesave" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                        <td id="print-salary-total-leaveloss" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                        <td id="print-salary-total-gross" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                        <td id="print-salary-total-grand" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                        <td id="print-salary-total-tax" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                        <td id="print-salary-total-net" style="padding: 8px 6px; text-align: right; border: 1px solid #000;"></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div style="margin-top: 3.5rem; display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 500;">
+                <div style="text-align: center; width: 250px;">
+                    <br><br>
+                    <div style="border-top: 1px solid #000; padding-top: 5px;">Prepared by<br>Accountant</div>
+                </div>
+                <div style="text-align: center; width: 250px;">
+                    <br><br>
+                    <div style="border-top: 1px solid #000; padding-top: 5px;">Approved by<br>Principal</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+            .modal-overlay, .modal-overlay * { visibility: visible; }
+            .modal-overlay { position: absolute; left: 0; top: 0; width: 100%; background: white !important; z-index: 9999; }
+            .modal-handle, .modal-close, .btn-primary, .btn-secondary, .header, main { display: none !important; }
+        }
+    </style>
+
+    <script type="module" src="accountant-app.js?v=1.3.0"></script>
+</body>
+</html>

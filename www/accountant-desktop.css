@@ -1,0 +1,578 @@
+:root {
+    --primary: #4f46e5;
+    --primary-dark: #3730a3;
+    --primary-light: #e0e7ff;
+    --secondary: #ec4899;
+    --accent: #10b981;
+    --accent-light: #d1fae5;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --error: #ef4444;
+    --error-light: #fee2e2;
+    --late: #f97316;
+    --late-light: #ffedd5;
+    --background: #f0f4f8;
+    --surface: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+
+    --radius-sm: 0.5rem;
+    --radius-md: 0.875rem;
+    --radius-lg: 1.25rem;
+    --radius-xl: 1.5rem;
+    --radius-full: 9999px;
+}
+
+/* ── Skeleton Shimmer ── */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f4f8 25%, #e2e8f0 50%, #f0f4f8 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0.5rem;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background-color: var(--background);
+    color: var(--text-main);
+    line-height: 1.5;
+    overflow: hidden; /* Prevent double scrollbars on desktop */
+    min-height: 100vh;
+}
+
+#app {
+    display: block;
+    max-width: 100%;
+    padding-bottom: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ========== Typography ========== */
+h1 { font-size: 1.5rem; font-weight: 800; color: var(--text-main); }
+h2 { font-size: 1.3rem; font-weight: 700; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p  { font-size: 0.875rem; color: var(--text-muted); }
+
+/* ========== Header (Full Widescreen App Bar) ========== */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    z-index: 300;
+    padding: 0 1.5rem 0 256px; /* Offsets for vertical sidebar layout */
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.header-content {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 { color: var(--text-main); margin-bottom: 0; font-size: 1.15rem; font-weight: 700; }
+.header p  { color: var(--text-muted); font-size: 0.7rem; font-weight: 500; }
+
+/* ========== Content Container ========== */
+main.container {
+    position: fixed;
+    top: 56px;
+    left: 240px;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    padding: 2rem 2.5rem;
+    max-width: none;
+    width: auto;
+    box-sizing: border-box;
+    background: var(--background);
+}
+
+/* Custom Scrollbar for Desktop content area */
+main.container::-webkit-scrollbar {
+    width: 6px;
+}
+main.container::-webkit-scrollbar-track {
+    background: transparent;
+}
+main.container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+main.container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ========== Cards ========== */
+.card {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    transition: transform 0.18s, box-shadow 0.18s;
+}
+.card:hover { box-shadow: var(--shadow-md); }
+.card:active { transform: scale(0.99); }
+.card.clickable { cursor: pointer; }
+
+/* ========== Sidebar Navigation (Desktop Conversion) ========== */
+.bottom-nav {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 240px;
+    height: 100vh;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-x: visible;
+    overflow-y: auto;
+    padding: 0;
+    padding-top: 56px; /* Clear fixed top header */
+    border-top: none;
+    border-right: 1px solid var(--border);
+    background: #ffffff;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+    z-index: 200;
+    gap: 0;
+}
+
+/* Sidebar Accountant Heading */
+.bottom-nav::before {
+    content: 'ACCOUNTANT PORTAL';
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #94a3b8;
+    padding: 1.5rem 1.25rem 0.5rem;
+    text-transform: uppercase;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    min-width: unset;
+    width: 100%;
+    padding: 0.8rem 1.25rem;
+    border-radius: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: left;
+    color: #64748b;
+    text-decoration: none;
+    position: relative;
+    transition: background 0.15s, color 0.15s;
+    border-left: 3px solid transparent;
+    margin: 0;
+}
+
+.nav-item:hover {
+    background: #f8fafc;
+    color: #4f46e5;
+    border-left-color: #c7d2fe;
+}
+
+.nav-item.active {
+    background: #eef2ff;
+    color: #4f46e5;
+    font-weight: 700;
+    border-left-color: #4f46e5;
+}
+
+.nav-icon-wrap {
+    width: 20px;
+    height: 20px;
+    background: transparent !important;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.nav-icon {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2;
+}
+
+.badge-notify {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    left: auto;
+    transform: translateY(-50%);
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background-color: var(--error);
+    color: #ffffff;
+    border-radius: var(--radius-full);
+    font-size: 0.6rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    border: 2px solid var(--surface);
+}
+
+/* ========== Buttons ========== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    gap: 0.4rem;
+    font-family: inherit;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.btn:active { opacity: 0.7; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,0.35); }
+.btn-primary:active { transform: translateY(0); }
+.btn-danger  { background: var(--error); color: white; }
+.btn-danger:hover  { background: #dc2626; }
+.btn-ghost  { background: #f1f5f9; color: var(--text-main); }
+.btn-ghost:hover  { background: #e2e8f0; }
+.btn-icon { padding: 0.55rem; border-radius: var(--radius-full); }
+.btn-sm { padding: 0.5rem 1rem; font-size: 0.8rem; }
+.btn-block { width: 100%; }
+
+/* ========== Forms ========== */
+.form-group { margin-bottom: 1rem; }
+.form-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.form-input {
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    font-size: 0.9rem;
+    outline: none;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text-main);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+}
+textarea.form-input { resize: vertical; min-height: 80px; }
+select.form-input { cursor: pointer; }
+
+/* ========== Modals (Larger on Desktop) ========== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    padding: 1rem;
+}
+.modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+}
+.modal-box {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    width: 90%;
+    max-width: 600px; /* Wider modal on desktop */
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 2rem;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    position: relative;
+}
+.modal-close-btn {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    z-index: 10;
+}
+.modal-close-btn:hover {
+    background: var(--border);
+    color: var(--text-main);
+}
+.modal-overlay.open .modal-box {
+    transform: scale(1);
+    opacity: 1;
+}
+.modal-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: var(--radius-full);
+    margin: 0 auto 1.25rem;
+}
+.modal-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 1.5rem; }
+
+/* ========== Toast (Bottom Right on Desktop) ========== */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    left: auto;
+    transform: translateY(20px);
+    background: #1e293b;
+    color: white;
+    padding: 0.85rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    z-index: 3000;
+    opacity: 0;
+    transition: all 0.3s;
+    box-shadow: var(--shadow-lg);
+    pointer-events: none;
+    max-width: 360px;
+    white-space: normal;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ========== View Animations ========== */
+@keyframes slideUp {
+    from { transform: translateY(12px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+.view { animation: slideUp 0.25s ease-out forwards; }
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== Tables & Ledgers (Premium Desktop Styling) ========== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+thead tr {
+    background-color: #f8fafc;
+    border-bottom: 2px solid var(--border);
+}
+th {
+    padding: 0.85rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+td {
+    padding: 0.85rem 1.25rem;
+    font-size: 0.875rem;
+}
+tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.15s;
+}
+tbody tr:nth-child(even) {
+    background-color: #fcfdfe;
+}
+tbody tr:hover {
+    background-color: #eef2ff;
+}
+
+/* ========== Splash Screen ========== */
+.splash-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.4s ease-out, visibility 0.4s;
+}
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--primary-light);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ========== Accountant Portal Specialization ========== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Widescreen 4-column layout */
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.fee-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Beautiful 3-column layout on Desktop */
+    gap: 1.25rem;
+}
+
+/* Additional responsive column scaling for wider screens */
+@media (min-width: 1400px) {
+    .fee-cards {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Print styles for receipts/statements */
+@media print {
+    body { background: white !important; }
+    .no-print { display: none !important; }
+    main.container {
+        position: static;
+        left: 0;
+        top: 0;
+        overflow: visible;
+        padding: 0 !important;
+    }
+    #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }
+    #receipt-print-template, 
+    #statement-print-template,
+    #salary-print-template {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 1rem !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Responsive sidebar overrides for Accountant Desktop */
+#nav-item-salary,
+#nav-item-parents,
+#nav-item-reports {
+    display: flex !important;
+}
+
+#nav-item-more {
+    display: none !important;
+}
+
+.hide-mobile {
+    display: table-cell !important;
+}
+
+/* ========== IRD Nepal Salary — Badge Styles ========== */
+.ird-badge {
+    font-size: 0.58rem;
+    font-weight: 700;
+    border-radius: 3px;
+    padding: 1px 4px;
+    border: 1px solid transparent;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+    display: inline-block;
+}
+.badge-green  { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.badge-pink   { background: #fdf2f8; color: #9d174d; border-color: #f9a8d4; }
+.badge-blue   { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.badge-teal   { background: #f0fdfa; color: #0f766e; border-color: #99f6e4; }
+.badge-orange { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+.badge-gray   { background: #f8fafc; color: #475569; border-color: #cbd5e1; }
+.badge-purple { background: #faf5ff; color: #6b21a8; border-color: #e9d5ff; }
+
+/* ========== IRD Compliance Info Bar ========== */
+.ird-info-bar {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid #4f46e5;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.78rem;
+    color: #1e3a5f;
+    line-height: 1.5;
+}
+.ird-info-bar strong { color: #1e40af; }
+.ird-info-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 0.05rem; }

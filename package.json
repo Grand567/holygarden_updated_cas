@@ -1,0 +1,20 @@
+{
+  "name": "holy-garden-emis",
+  "version": "1.0.0",
+  "description": "Holy Garden Emis App",
+  "main": "index.html",
+  "scripts": {
+    "sync": "cap sync"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/filesystem": "^6.0.0",
+    "@capacitor/share": "^6.0.0",
+    "jsdom": "^29.1.1",
+    "pdf-parse": "^2.4.5"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0"
+  }
+}

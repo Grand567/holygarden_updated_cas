@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+build/
+*.exe
+*.apk
+*.asar
+android/app/build/
+android/.gradle/
+android/local.properties
+
+# Editor and OS files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Logs and debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Project specific scratch/debug files
+scratch/
+test_*.js
+debug_*.js
+check_*.js
+schema.json
+pdf_text.txt
+extract*.js
+extract*.py
